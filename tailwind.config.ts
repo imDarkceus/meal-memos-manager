@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,21 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Custom colors for our meal management app
+				"app-blue": {
+					light: "#E5F1FB",
+					DEFAULT: "#3498DB",
+					dark: "#2980B9"
+				},
+				"app-orange": {
+					DEFAULT: "#F39C12",
+					dark: "#D35400"
+				},
+				"app-gray": {
+					light: "#F8F9FA",
+					DEFAULT: "#ECF0F1",
+					dark: "#7F8C8D"
 				}
 			},
 			borderRadius: {

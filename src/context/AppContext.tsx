@@ -1,6 +1,5 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { format } from "date-fns";
 
 // Types
 interface Member {
@@ -40,6 +39,7 @@ interface AppContextType {
   getRemainingBalance: () => number;
   getMealRate: () => number;
   getMemberMeals: (memberId: string) => number;
+  currencySymbol: string;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -72,6 +72,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [members, setMembers] = useState<Member[]>(() => loadData("members", []));
   const [mealEntries, setMealEntries] = useState<MealEntry[]>(() => loadData("mealEntries", []));
   const [expenses, setExpenses] = useState<Expense[]>(() => loadData("expenses", []));
+  const currencySymbol = "৳"; // Bangladeshi Taka symbol
 
   // Save data whenever it changes
   useEffect(() => {
@@ -190,7 +191,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     getTotalMeals,
     getRemainingBalance,
     getMealRate,
-    getMemberMeals
+    getMemberMeals,
+    currencySymbol
   };
 
   return (

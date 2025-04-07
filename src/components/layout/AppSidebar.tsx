@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Home, User, Calendar, DollarSign } from "lucide-react";
+import { Home, User, Calendar, DollarSign, Rocket } from "lucide-react";
 
 const AppSidebar = () => {
   const navItems = [
@@ -23,8 +23,9 @@ const AppSidebar = () => {
   return (
     <Sidebar>
       <SidebarContent>
-        <div className="py-4 px-6 border-b">
-          <h2 className="text-xl font-bold text-app-blue">MealMemos</h2>
+        <div className="py-4 px-6 border-b flex items-center gap-2">
+          <Rocket className="h-6 w-6 text-app-blue" />
+          <h2 className="text-xl font-bold text-app-blue">Area 51</h2>
         </div>
         <SidebarGroup>
           <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
@@ -36,7 +37,7 @@ const AppSidebar = () => {
                     <NavLink
                       to={item.path}
                       className={({ isActive }) =>
-                        isActive ? "text-app-blue font-medium" : "text-gray-600 hover:text-app-blue"
+                        isActive ? "text-app-blue font-medium" : "text-foreground hover:text-app-blue"
                       }
                     >
                       <item.icon className="w-5 h-5" />

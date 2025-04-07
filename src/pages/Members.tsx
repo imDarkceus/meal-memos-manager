@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, User } from "lucide-react";
 
 const Members = () => {
-  const { members, addMember, updateMemberBalance } = useAppContext();
+  const { members, addMember, updateMemberBalance, currencySymbol } = useAppContext();
   const { toast } = useToast();
   const [newMemberName, setNewMemberName] = useState("");
   const [depositAmounts, setDepositAmounts] = useState<{ [key: string]: string }>({});
@@ -43,7 +43,7 @@ const Members = () => {
       const member = members.find(m => m.id === memberId);
       toast({
         title: amount > 0 ? "Deposit Added" : "Balance Adjusted",
-        description: `${member?.name}'s balance has been updated by ₹${amount.toFixed(2)}`,
+        description: `${member?.name}'s balance has been updated by ${currencySymbol}${amount.toFixed(2)}`,
       });
     }
   };
@@ -52,7 +52,7 @@ const Members = () => {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Members</h1>
 
-      <Card>
+      <Card className="transition-all duration-200 hover:shadow-md">
         <CardHeader>
           <CardTitle>Add New Member</CardTitle>
         </CardHeader>
@@ -71,7 +71,7 @@ const Members = () => {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="transition-all duration-200 hover:shadow-md">
         <CardHeader>
           <CardTitle>Member List & Wallet</CardTitle>
         </CardHeader>
@@ -79,13 +79,16 @@ const Members = () => {
           {members.length > 0 ? (
             <div className="space-y-4">
               {members.map((member) => (
-                <div key={member.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-app-gray rounded-md">
+                <div 
+                  key={member.id} 
+                  className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-app-gray rounded-md hover:bg-muted/50 transition-colors"
+                >
                   <div className="flex items-center mb-2 sm:mb-0">
                     <User className="h-5 w-5 mr-2 text-app-blue" />
                     <div>
                       <h3 className="font-medium">{member.name}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Current Balance: ₹{member.balance.toFixed(2)}
+                        Current Balance: {currencySymbol}{member.balance.toFixed(2)}
                       </p>
                     </div>
                   </div>

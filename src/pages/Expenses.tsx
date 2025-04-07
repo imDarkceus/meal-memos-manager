@@ -9,7 +9,7 @@ import { format, parseISO } from "date-fns";
 import { DollarSign, Calendar, Trash2 } from "lucide-react";
 
 const Expenses = () => {
-  const { expenses, addExpense, currentMonth } = useAppContext();
+  const { expenses, addExpense, currentMonth, currencySymbol } = useAppContext();
   const { toast } = useToast();
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
@@ -52,7 +52,7 @@ const Expenses = () => {
 
     toast({
       title: "Expense Added",
-      description: `Added ₹${parsedAmount.toFixed(2)} for ${description.trim()}`,
+      description: `Added ${currencySymbol}${parsedAmount.toFixed(2)} for ${description.trim()}`,
     });
   };
 
@@ -60,7 +60,7 @@ const Expenses = () => {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Expenses</h1>
 
-      <Card>
+      <Card className="transition-all duration-200 hover:shadow-md">
         <CardHeader>
           <CardTitle>Add New Expense</CardTitle>
         </CardHeader>
@@ -77,7 +77,7 @@ const Expenses = () => {
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">Amount (₹)</label>
+              <label className="text-sm font-medium">Amount ({currencySymbol})</label>
               <Input
                 type="number"
                 value={amount}
@@ -103,7 +103,7 @@ const Expenses = () => {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="transition-all duration-200 hover:shadow-md">
         <CardHeader>
           <CardTitle className="flex justify-between items-center">
             <span>Expense History</span>
@@ -116,7 +116,10 @@ const Expenses = () => {
           {currentMonthExpenses.length > 0 ? (
             <div className="space-y-4">
               {currentMonthExpenses.map((expense) => (
-                <div key={expense.id} className="flex justify-between items-center p-3 bg-app-gray rounded-md">
+                <div 
+                  key={expense.id} 
+                  className="flex justify-between items-center p-3 bg-app-gray rounded-md hover:bg-muted/50 transition-colors"
+                >
                   <div className="flex gap-3 items-center">
                     <Calendar className="h-5 w-5 text-app-gray-dark" />
                     <div>
@@ -127,7 +130,7 @@ const Expenses = () => {
                     </div>
                   </div>
                   <div className="font-semibold">
-                    ₹{expense.amount.toFixed(2)}
+                    {currencySymbol}{expense.amount.toFixed(2)}
                   </div>
                 </div>
               ))}

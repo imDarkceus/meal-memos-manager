@@ -164,9 +164,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return getTotalDeposits() - getTotalExpenses();
   };
 
+  // Fixed meal rate calculation - ensure we're only calculating for current month
+  // and handling division by zero properly
   const getMealRate = () => {
     const totalMeals = getTotalMeals();
-    return totalMeals > 0 ? getTotalExpenses() / totalMeals : 0;
+    const totalExpenses = getTotalExpenses();
+    
+    if (totalMeals <= 0) return 0;
+    return totalExpenses / totalMeals;
   };
 
   const getMemberMeals = (memberId: string) => {

@@ -1,4 +1,3 @@
-
 import { useAppContext } from "@/context/AppContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,7 +29,6 @@ const Dashboard = () => {
     mealRate: 0
   });
 
-  // Generate last 12 months for the month selector
   const monthOptions = Array.from({ length: 12 }, (_, i) => {
     const date = subMonths(new Date(), i);
     return {
@@ -53,7 +51,6 @@ const Dashboard = () => {
     }
   };
 
-  // Animation for stats
   useEffect(() => {
     const targetStats = {
       expenses: getTotalExpenses(),
@@ -61,6 +58,10 @@ const Dashboard = () => {
       balance: getRemainingBalance(),
       mealRate: getMealRate()
     };
+
+    console.log("Total Expenses:", getTotalExpenses());
+    console.log("Total Meals:", getTotalMeals());
+    console.log("Calculated Meal Rate:", getMealRate());
 
     const animationDuration = 800; // in ms
     const steps = 20;
@@ -86,9 +87,8 @@ const Dashboard = () => {
     }, interval);
     
     return () => clearInterval(animation);
-  }, [currentMonth, getTotalExpenses, getTotalDeposits, getRemainingBalance, getMealRate]);
+  }, [currentMonth, getTotalExpenses, getTotalDeposits, getRemainingBalance, getMealRate, getTotalMeals]);
 
-  // Prepare data for the charts
   const mealChartData = members.map(member => ({
     name: member.name,
     meals: getMemberMeals(member.id),
@@ -96,7 +96,6 @@ const Dashboard = () => {
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#9B87F5', '#D6BCFA'];
   
-  // Pie chart data
   const pieChartData = members.map(member => ({
     name: member.name,
     value: getMemberMeals(member.id)

@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Members from "./pages/Members";
 import MealTracking from "./pages/MealTracking";
 import Expenses from "./pages/Expenses";
+import Report from "./pages/Report";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
                 <Route path="members" element={<Members />} />
                 <Route path="meals" element={<MealTracking />} />
                 <Route path="expenses" element={<Expenses />} />
+                <Route path="report" element={<Report />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>

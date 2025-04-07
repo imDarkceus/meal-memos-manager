@@ -1,11 +1,12 @@
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAppContext } from "@/context/AppContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, User } from "lucide-react";
+import { Plus, User, FileText } from "lucide-react";
 
 const Members = () => {
   const { members, addMember, updateMemberBalance, currencySymbol } = useAppContext();
@@ -50,7 +51,14 @@ const Members = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Members</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Members</h1>
+        <Link to="/report">
+          <Button variant="outline" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" /> View Reports
+          </Button>
+        </Link>
+      </div>
 
       <Card className="transition-all duration-200 hover:shadow-md">
         <CardHeader>

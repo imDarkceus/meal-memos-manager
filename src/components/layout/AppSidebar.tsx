@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Home, User, Calendar, DollarSign, Rocket } from "lucide-react";
+import { Home, User, Calendar, DollarSign, Rocket, FileText } from "lucide-react";
 
 const AppSidebar = () => {
   const navItems = [
@@ -18,6 +18,7 @@ const AppSidebar = () => {
     { icon: User, label: "Members", path: "/members" },
     { icon: Calendar, label: "Meal Tracking", path: "/meals" },
     { icon: DollarSign, label: "Expenses", path: "/expenses" },
+    { icon: FileText, label: "Report", path: "/report" },
   ];
 
   return (

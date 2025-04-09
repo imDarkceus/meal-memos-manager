@@ -60,34 +60,86 @@ const Report = () => {
   }, [members, getMemberMeals, getMealRate, currencySymbol]);
 
   const exportToPDF = () => {
-    const doc = new jsPDF();
-    const title = "Area 51 - Members Report";
+    // Create new jsPDF instance with better orientation for table data
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
     
-    // Add title
+    // Add title with better formatting
+    const title = "AREA 51 - MEMBERS REPORT";
     doc.setFontSize(18);
-    doc.text(title, 14, 22);
+    doc.setFont("helvetica", "bold");
+    doc.text(title, doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
     
-    // Add date
-    const date = new Date().toLocaleDateString();
+    // Add date with better positioning
+    const date = new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
     doc.setFontSize(10);
-    doc.text(`Generated on: ${date}`, 14, 30);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Generated on: ${date}`, doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
     
-    const tableColumn = ["Member Name", "Total Meals", "Deposit Amount", "Meal Cost", "Remarks"];
+    // Add summary info
+    const mealRate = getMealRate();
+    doc.setFontSize(10);
+    doc.text(`Meal Rate: ${currencySymbol}${mealRate.toFixed(2)}`, 14, 30);
+    doc.text(`Total Members: ${members.length}`, 14, 35);
+    
+    const tableColumn = ["Member Name", "Total Meals", "Deposit Amount", "Meal Cost", "Balance", "Remarks"];
     const tableRows = reports.map(report => [
       report.name,
       report.totalMeals.toString(),
       `${currencySymbol}${report.totalDeposit.toFixed(2)}`,
       `${currencySymbol}${report.mealCost.toFixed(2)}`,
+      `${currencySymbol}${report.balance.toFixed(2)}`,
       report.remarks
     ]);
     
+    // Use autoTable with improved formatting
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 35,
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [75, 75, 75] }
+      startY: 40,
+      styles: { 
+        fontSize: 9,
+        cellPadding: 3,
+        lineColor: [75, 75, 75],
+        lineWidth: 0.1,
+      },
+      headStyles: { 
+        fillColor: [41, 128, 185], 
+        textColor: 255,
+        fontStyle: 'bold',
+        halign: 'center'
+      },
+      bodyStyles: {
+        halign: 'left'
+      },
+      columnStyles: {
+        0: { cellWidth: 50 },
+        1: { cellWidth: 20, halign: 'center' },
+        2: { cellWidth: 30, halign: 'right' },
+        3: { cellWidth: 30, halign: 'right' },
+        4: { cellWidth: 30, halign: 'right' },
+        5: { cellWidth: 'auto' }
+      },
+      alternateRowStyles: {
+        fillColor: [240, 240, 240]
+      }
     });
+    
+    // Add footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.text('Area 51 Meal Management System', 14, doc.internal.pageSize.getHeight() - 10);
+      doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 30, doc.internal.pageSize.getHeight() - 10);
+    }
     
     doc.save("area51-member-report.pdf");
   };

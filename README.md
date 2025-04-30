@@ -1,4 +1,4 @@
-# Welcome to Meal Manager project
+# Welcome to Meal Manager project developed by Ismail Hossain
 
 ## Project info
 1. Add members

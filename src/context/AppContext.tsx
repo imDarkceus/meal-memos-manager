@@ -51,14 +51,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Member functions
   const addMember = (name: string) => {
-    setMembers([...members, { id: generateId(), name, balance: 0 }]);
+    const newMember: Member = {
+      id: generateId(),
+      name,
+      balance: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      user_id: null
+    };
+    setMembers([...members, newMember]);
   };
 
   const updateMemberBalance = (id: string, amount: number) => {
     setMembers(
       members.map((member) =>
         member.id === id
-          ? { ...member, balance: member.balance + amount }
+          ? { ...member, balance: member.balance + amount, updated_at: new Date().toISOString() }
           : member
       )
     );
@@ -68,16 +76,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addMealEntry = (memberId: string, date: string, count: number) => {
     // Check if entry already exists for that member and date
     const existingEntry = mealEntries.find(
-      (entry) => entry.memberId === memberId && entry.date === date
+      (entry) => entry.member_id === memberId && entry.date === date
     );
 
     if (existingEntry) {
       updateMealEntry(existingEntry.id, count);
     } else {
-      setMealEntries([
-        ...mealEntries,
-        { id: generateId(), memberId, date, count }
-      ]);
+      const newEntry: MealEntry = {
+        id: generateId(),
+        member_id: memberId,
+        date,
+        count,
+        created_at: new Date().toISOString(),
+        user_id: ''
+      };
+      setMealEntries([...mealEntries, newEntry]);
     }
   };
 
@@ -91,10 +104,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Expense functions
   const addExpense = (date: string, amount: number, description: string) => {
-    setExpenses([
-      ...expenses,
-      { id: generateId(), date, amount, description }
-    ]);
+    const newExpense: Expense = {
+      id: generateId(),
+      date,
+      amount,
+      description,
+      created_at: new Date().toISOString(),
+      user_id: ''
+    };
+    setExpenses([...expenses, newExpense]);
   };
 
   // Helper functions for calculations
@@ -138,7 +156,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const getMemberMeals = (memberId: string) => {
     return mealEntries
-      .filter((entry) => entry.memberId === memberId && isCurrentMonth(entry.date))
+      .filter((entry) => entry.member_id === memberId && isCurrentMonth(entry.date))
       .reduce((total, entry) => total + entry.count, 0);
   };
 
@@ -168,7 +186,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Reset member balances
       const updatedMembers = members.map(member => ({
         ...member,
-        balance: 0
+        balance: 0,
+        updated_at: new Date().toISOString()
       }));
       
       setMealEntries(filteredMealEntries);

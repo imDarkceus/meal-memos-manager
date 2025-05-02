@@ -29,7 +29,7 @@ const MealTracking = () => {
   const getMealCount = (date: Date, memberId: string) => {
     const formattedDate = format(date, "yyyy-MM-dd");
     const entry = mealEntries.find(
-      (e) => e.memberId === memberId && e.date === formattedDate
+      (e) => e.member_id === memberId && e.date === formattedDate
     );
     return entry ? entry.count : 0;
   };

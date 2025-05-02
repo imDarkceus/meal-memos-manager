@@ -1,5 +1,7 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { AppContextType, Member, MealEntry, Expense } from "@/types";
+import { toast } from "sonner";
 
 // Types
 interface Member {
@@ -40,6 +42,7 @@ interface AppContextType {
   getMealRate: () => number;
   getMemberMeals: (memberId: string) => number;
   currencySymbol: string;
+  clearCurrentMonth: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -180,6 +183,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       .reduce((total, entry) => total + entry.count, 0);
   };
 
+  // Function to clear data for the current month
+  const clearCurrentMonth = async () => {
+    try {
+      const month = currentMonth.getMonth() + 1; // JavaScript months are 0-11
+      const year = currentMonth.getFullYear();
+      
+      const { error } = await supabase.rpc('clear_current_month_data', { month, year });
+      
+      if (error) throw error;
+      
+      // Clear local data as well
+      const filteredMealEntries = mealEntries.filter(entry => {
+        const entryDate = new Date(entry.date);
+        return !(entryDate.getMonth() === currentMonth.getMonth() && 
+                entryDate.getFullYear() === currentMonth.getFullYear());
+      });
+      
+      const filteredExpenses = expenses.filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return !(expenseDate.getMonth() === currentMonth.getMonth() && 
+                expenseDate.getFullYear() === currentMonth.getFullYear());
+      });
+      
+      // Reset member balances
+      const updatedMembers = members.map(member => ({
+        ...member,
+        balance: 0
+      }));
+      
+      setMealEntries(filteredMealEntries);
+      setExpenses(filteredExpenses);
+      setMembers(updatedMembers);
+      
+      toast.success(`Data for ${currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })} has been cleared`);
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Error clearing month data:', error);
+      toast.error('Failed to clear data for the current month');
+      return Promise.reject(error);
+    }
+  };
+
   const contextValue: AppContextType = {
     currentMonth,
     setCurrentMonth,
@@ -197,7 +242,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     getRemainingBalance,
     getMealRate,
     getMemberMeals,
-    currencySymbol
+    currencySymbol,
+    clearCurrentMonth
   };
 
   return (

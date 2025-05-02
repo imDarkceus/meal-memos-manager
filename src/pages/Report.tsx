@@ -6,16 +6,7 @@ import { FileText, Download, User, Calendar, CircleDollarSign } from "lucide-rea
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { jsPDF } from "jspdf";
 import { autoTable } from "jspdf-autotable";
-
-interface MemberReport {
-  id: string;
-  name: string;
-  totalMeals: number;
-  totalDeposit: number;
-  mealCost: number;
-  balance: number;
-  remarks: string;
-}
+import { MemberReport } from "@/types";
 
 const Report = () => {
   const { 

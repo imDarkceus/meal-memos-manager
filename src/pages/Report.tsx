@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAppContext } from "@/context/AppContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -132,8 +131,8 @@ const Report = () => {
       }
     });
     
-    // Add footer
-    const pageCount = doc.internal.getNumberOfPages();
+    // Add footer with page count 
+    const pageCount = doc.internal.pages.length;
     for(let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setFontSize(8);

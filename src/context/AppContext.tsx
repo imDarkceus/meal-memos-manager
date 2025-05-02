@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppContextType, Member, MealEntry, Expense } from "@/types";
 import { toast } from "sonner";
+import { useAuth } from "./AuthContext";
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -30,6 +31,7 @@ const saveData = <T,>(key: string, data: T): void => {
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [members, setMembers] = useState<Member[]>(() => loadData("members", []));
   const [mealEntries, setMealEntries] = useState<MealEntry[]>(() => loadData("mealEntries", []));
@@ -57,7 +59,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       balance: 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      user_id: null
+      user_id: user?.id || null
     };
     setMembers([...members, newMember]);
   };
@@ -88,7 +90,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         date,
         count,
         created_at: new Date().toISOString(),
-        user_id: ''
+        user_id: user?.id || ''
       };
       setMealEntries([...mealEntries, newEntry]);
     }
@@ -110,7 +112,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       amount,
       description,
       created_at: new Date().toISOString(),
-      user_id: ''
+      user_id: user?.id || ''
     };
     setExpenses([...expenses, newExpense]);
   };

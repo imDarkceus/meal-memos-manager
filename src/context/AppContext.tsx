@@ -1,49 +1,8 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppContextType, Member, MealEntry, Expense } from "@/types";
 import { toast } from "sonner";
-
-// Types
-interface Member {
-  id: string;
-  name: string;
-  balance: number;
-}
-
-interface MealEntry {
-  id: string;
-  memberId: string;
-  date: string; // ISO string
-  count: number;
-}
-
-interface Expense {
-  id: string;
-  date: string; // ISO string
-  amount: number;
-  description: string;
-}
-
-interface AppContextType {
-  currentMonth: Date;
-  setCurrentMonth: (date: Date) => void;
-  members: Member[];
-  addMember: (name: string) => void;
-  updateMemberBalance: (id: string, amount: number) => void;
-  mealEntries: MealEntry[];
-  addMealEntry: (memberId: string, date: string, count: number) => void;
-  updateMealEntry: (id: string, count: number) => void;
-  expenses: Expense[];
-  addExpense: (date: string, amount: number, description: string) => void;
-  getTotalExpenses: () => number;
-  getTotalDeposits: () => number;
-  getTotalMeals: () => number;
-  getRemainingBalance: () => number;
-  getMealRate: () => number;
-  getMemberMeals: (memberId: string) => number;
-  currencySymbol: string;
-  clearCurrentMonth: () => Promise<void>;
-}
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 

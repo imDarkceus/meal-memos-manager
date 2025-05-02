@@ -8,14 +8,24 @@ const Index = () => {
   const { session } = useAuth();
 
   useEffect(() => {
-    if (session) {
-      navigate("/");
-    } else {
-      navigate("/auth");
-    }
+    const redirectUser = async () => {
+      if (session) {
+        navigate("/", { replace: true });
+      } else {
+        navigate("/auth", { replace: true });
+      }
+    };
+    
+    redirectUser();
   }, [navigate, session]);
 
-  return null;
+  return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="animate-pulse">
+        <span className="text-primary font-bold">Redirecting...</span>
+      </div>
+    </div>
+  );
 };
 
 export default Index;

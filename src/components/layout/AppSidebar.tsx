@@ -11,8 +11,13 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Home, User, Calendar, DollarSign, Rocket, FileText } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useSidebar } from "@/components/ui/sidebar";
 
 const AppSidebar = () => {
+  const { setOpenMobile } = useSidebar();
+  const isMobile = useIsMobile();
+  
   const navItems = [
     { icon: Home, label: "Dashboard", path: "/" },
     { icon: User, label: "Members", path: "/members" },
@@ -20,6 +25,13 @@ const AppSidebar = () => {
     { icon: DollarSign, label: "Expenses", path: "/expenses" },
     { icon: FileText, label: "Report", path: "/report" },
   ];
+
+  // Close mobile sidebar when navigating
+  const handleNavigation = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <Sidebar>
@@ -37,6 +49,7 @@ const AppSidebar = () => {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.path}
+                      onClick={handleNavigation}
                       className={({ isActive }) =>
                         isActive ? "text-app-blue font-medium" : "text-foreground hover:text-app-blue"
                       }

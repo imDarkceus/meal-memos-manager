@@ -49,22 +49,50 @@ const MealTracking = () => {
       <h1 className="text-2xl font-bold">Meal Tracking</h1>
 
       <div className="sticky top-0 z-50 bg-background pb-4 pt-2 border-b shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <Select
-          value={selectedMember || ""}
-          onValueChange={setSelectedMember}
-          disabled={members.length === 0}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select member" />
-          </SelectTrigger>
-          <SelectContent>
-            {members.map((member) => (
-              <SelectItem key={member.id} value={member.id}>
-                {member.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="icon"
+            disabled={members.length === 0}
+            onClick={() => {
+              const currentIndex = members.findIndex(m => m.id === selectedMember);
+              const prevIndex = currentIndex > 0 ? currentIndex - 1 : members.length - 1;
+              setSelectedMember(members[prevIndex]?.id || null);
+            }}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <Select
+            value={selectedMember || ""}
+            onValueChange={setSelectedMember}
+            disabled={members.length === 0}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Select member" />
+            </SelectTrigger>
+            <SelectContent>
+              {members.map((member) => (
+                <SelectItem key={member.id} value={member.id}>
+                  {member.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Button 
+            variant="outline" 
+            size="icon"
+            disabled={members.length === 0}
+            onClick={() => {
+              const currentIndex = members.findIndex(m => m.id === selectedMember);
+              const nextIndex = currentIndex < members.length - 1 ? currentIndex + 1 : 0;
+              setSelectedMember(members[nextIndex]?.id || null);
+            }}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
 
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="icon" onClick={prevMonth}>

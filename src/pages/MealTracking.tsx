@@ -48,7 +48,7 @@ const MealTracking = () => {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Meal Tracking</h1>
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="sticky top-0 z-50 bg-background pb-4 pt-2 border-b shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <Select
           value={selectedMember || ""}
           onValueChange={setSelectedMember}

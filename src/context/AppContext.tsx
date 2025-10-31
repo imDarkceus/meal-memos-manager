@@ -33,70 +33,160 @@ const saveData = <T,>(key: string, data: T): void => {
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
-  const [members, setMembers] = useState<Member[]>(() => loadData("members", []));
-  const [mealEntries, setMealEntries] = useState<MealEntry[]>(() => loadData("mealEntries", []));
-  const [expenses, setExpenses] = useState<Expense[]>(() => loadData("expenses", []));
+  const [members, setMembers] = useState<Member[]>([]);
+  const [mealEntries, setMealEntries] = useState<MealEntry[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
   const currencySymbol = "৳"; // Bangladeshi Taka symbol
 
-  // Save data whenever it changes
+  // Fetch data from Supabase when user logs in
   useEffect(() => {
-    saveData("members", members);
-  }, [members]);
+    const fetchData = async () => {
+      if (!user) {
+        setMembers([]);
+        setMealEntries([]);
+        setExpenses([]);
+        setLoading(false);
+        return;
+      }
 
-  useEffect(() => {
-    saveData("mealEntries", mealEntries);
-  }, [mealEntries]);
+      try {
+        setLoading(true);
+        
+        // Fetch members
+        const { data: membersData, error: membersError } = await supabase
+          .from('members')
+          .select('*')
+          .order('created_at', { ascending: true });
+        
+        if (membersError) throw membersError;
+        
+        // Fetch meal entries
+        const { data: mealEntriesData, error: mealEntriesError } = await supabase
+          .from('meal_entries')
+          .select('*')
+          .order('date', { ascending: true });
+        
+        if (mealEntriesError) throw mealEntriesError;
+        
+        // Fetch expenses
+        const { data: expensesData, error: expensesError } = await supabase
+          .from('expenses')
+          .select('*')
+          .order('date', { ascending: true });
+        
+        if (expensesError) throw expensesError;
+        
+        setMembers(membersData || []);
+        setMealEntries(mealEntriesData || []);
+        setExpenses(expensesData || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load data');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  useEffect(() => {
-    saveData("expenses", expenses);
-  }, [expenses]);
+    fetchData();
+  }, [user]);
 
   // Member functions
-  const addMember = (name: string) => {
-    const newMember: Member = {
-      id: generateId(),
+  const addMember = async (name: string) => {
+    if (!user) return;
+    
+    const newMember = {
       name,
       balance: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      user_id: user?.id || null
+      user_id: user.id
     };
-    setMembers([...members, newMember]);
+    
+    const { data, error } = await supabase
+      .from('members')
+      .insert([newMember])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error adding member:', error);
+      toast.error('Failed to add member');
+      return;
+    }
+    
+    setMembers([...members, data]);
   };
 
-  const updateMemberBalance = (id: string, amount: number) => {
+  const updateMemberBalance = async (id: string, amount: number) => {
+    const member = members.find(m => m.id === id);
+    if (!member) return;
+    
+    const newBalance = member.balance + amount;
+    
+    const { error } = await supabase
+      .from('members')
+      .update({ balance: newBalance, updated_at: new Date().toISOString() })
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error updating balance:', error);
+      toast.error('Failed to update balance');
+      return;
+    }
+    
     setMembers(
-      members.map((member) =>
-        member.id === id
-          ? { ...member, balance: member.balance + amount, updated_at: new Date().toISOString() }
-          : member
+      members.map((m) =>
+        m.id === id ? { ...m, balance: newBalance, updated_at: new Date().toISOString() } : m
       )
     );
   };
 
   // Meal entry functions
-  const addMealEntry = (memberId: string, date: string, count: number) => {
+  const addMealEntry = async (memberId: string, date: string, count: number) => {
+    if (!user) return;
+    
     // Check if entry already exists for that member and date
     const existingEntry = mealEntries.find(
       (entry) => entry.member_id === memberId && entry.date === date
     );
 
     if (existingEntry) {
-      updateMealEntry(existingEntry.id, count);
+      await updateMealEntry(existingEntry.id, count);
     } else {
-      const newEntry: MealEntry = {
-        id: generateId(),
+      const newEntry = {
         member_id: memberId,
         date,
         count,
-        created_at: new Date().toISOString(),
-        user_id: user?.id || ''
+        user_id: user.id
       };
-      setMealEntries([...mealEntries, newEntry]);
+      
+      const { data, error } = await supabase
+        .from('meal_entries')
+        .insert([newEntry])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error adding meal entry:', error);
+        toast.error('Failed to add meal entry');
+        return;
+      }
+      
+      setMealEntries([...mealEntries, data]);
     }
   };
 
-  const updateMealEntry = (id: string, count: number) => {
+  const updateMealEntry = async (id: string, count: number) => {
+    const { error } = await supabase
+      .from('meal_entries')
+      .update({ count })
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error updating meal entry:', error);
+      toast.error('Failed to update meal entry');
+      return;
+    }
+    
     setMealEntries(
       mealEntries.map((entry) =>
         entry.id === id ? { ...entry, count } : entry
@@ -105,16 +195,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Expense functions
-  const addExpense = (date: string, amount: number, description: string) => {
-    const newExpense: Expense = {
-      id: generateId(),
+  const addExpense = async (date: string, amount: number, description: string) => {
+    if (!user) return;
+    
+    const newExpense = {
       date,
       amount,
       description,
-      created_at: new Date().toISOString(),
-      user_id: user?.id || ''
+      user_id: user.id
     };
-    setExpenses([...expenses, newExpense]);
+    
+    const { data, error } = await supabase
+      .from('expenses')
+      .insert([newExpense])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error adding expense:', error);
+      toast.error('Failed to add expense');
+      return;
+    }
+    
+    setExpenses([...expenses, data]);
   };
 
   // Helper functions for calculations
@@ -225,6 +328,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     currencySymbol,
     clearCurrentMonth
   };
+
+  if (loading) {
+    return (
+      <AppContext.Provider value={contextValue}>
+        <div className="flex items-center justify-center min-h-screen">Loading...</div>
+      </AppContext.Provider>
+    );
+  }
 
   return (
     <AppContext.Provider value={contextValue}>

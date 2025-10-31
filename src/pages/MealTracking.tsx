@@ -48,7 +48,7 @@ const MealTracking = () => {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Meal Tracking</h1>
 
-      <div className="sticky top-0 z-50 bg-background pb-4 pt-2 border-b shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-background pb-4 pt-2 px-6 border-b shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-2">
           <Button 
             variant="outline" 
@@ -107,6 +107,8 @@ const MealTracking = () => {
         </div>
       </div>
 
+      <div className="mt-24" />
+      
       {!selectedMember && members.length === 0 ? (
         <Card>
           <CardContent className="py-8">

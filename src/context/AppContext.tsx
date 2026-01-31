@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppContextType, Member, MealEntry, Expense } from "@/types";
+import { supabase as sb } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "./AuthContext";
 
@@ -114,6 +115,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     
     setMembers([...members, data]);
+  };
+
+  const deleteMember = async (id: string) => {
+    // First delete related meal entries
+    const { error: mealError } = await supabase
+      .from('meal_entries')
+      .delete()
+      .eq('member_id', id);
+    
+    if (mealError) {
+      console.error('Error deleting meal entries:', mealError);
+      toast.error('Failed to delete member meal entries');
+      return;
+    }
+    
+    // Then delete the member
+    const { error } = await supabase
+      .from('members')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error deleting member:', error);
+      toast.error('Failed to delete member');
+      return;
+    }
+    
+    setMembers(members.filter(m => m.id !== id));
+    setMealEntries(mealEntries.filter(e => e.member_id !== id));
   };
 
   const updateMemberBalance = async (id: string, amount: number) => {
@@ -313,6 +343,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentMonth,
     members,
     addMember,
+    deleteMember,
     updateMemberBalance,
     mealEntries,
     addMealEntry,

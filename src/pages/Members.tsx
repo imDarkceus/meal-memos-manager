@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const Members = () => {
-  const { members, addMember, deleteMember, updateMemberBalance, currencySymbol } = useAppContext();
+  const { members, addMember, deleteMember, addDeposit, getMemberDeposits, currencySymbol, currentMonth } = useAppContext();
   const { toast } = useToast();
   const [newMemberName, setNewMemberName] = useState("");
   const [depositAmounts, setDepositAmounts] = useState<{ [key: string]: string }>({});
@@ -46,7 +46,7 @@ const Members = () => {
   const handleDeposit = (memberId: string) => {
     const amount = parseFloat(depositAmounts[memberId] || "0");
     if (!isNaN(amount) && amount !== 0) {
-      updateMemberBalance(memberId, amount);
+      addDeposit(memberId, amount);
       setDepositAmounts({
         ...depositAmounts,
         [memberId]: "",
@@ -55,7 +55,7 @@ const Members = () => {
       const member = members.find(m => m.id === memberId);
       toast({
         title: amount > 0 ? "Deposit Added" : "Balance Adjusted",
-        description: `${member?.name}'s balance has been updated by ${currencySymbol}${amount.toFixed(2)}`,
+        description: `${member?.name}'s deposit of ${currencySymbol}${Math.abs(amount).toFixed(2)} has been recorded for ${currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}`,
       });
     }
   };
@@ -68,6 +68,8 @@ const Members = () => {
       description: `${member?.name} has been removed from the mess`,
     });
   };
+
+  const monthLabel = currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
 
   return (
     <div className="space-y-6">
@@ -101,7 +103,7 @@ const Members = () => {
 
       <Card className="transition-all duration-200 hover:shadow-md">
         <CardHeader>
-          <CardTitle>Member List & Wallet</CardTitle>
+          <CardTitle>Member List & Deposits ({monthLabel})</CardTitle>
         </CardHeader>
         <CardContent>
           {members.length > 0 ? (
@@ -116,7 +118,7 @@ const Members = () => {
                     <div>
                       <h3 className="font-medium">{member.name}</h3>
                       <p className="text-sm text-muted-foreground">
-                        Current Balance: {currencySymbol}{member.balance.toFixed(2)}
+                        Deposit this month: {currencySymbol}{getMemberDeposits(member.id).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -131,7 +133,7 @@ const Members = () => {
                       onClick={() => handleDeposit(member.id)}
                       variant="outline"
                     >
-                      Update Balance
+                      Add Deposit
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -143,7 +145,7 @@ const Members = () => {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete Member</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Are you sure you want to delete {member.name}? This will also delete all their meal entries and cannot be undone.
+                            Are you sure you want to delete {member.name}? This will also delete all their meal entries and deposits and cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>

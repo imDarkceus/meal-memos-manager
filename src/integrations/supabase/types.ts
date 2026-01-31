@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      deposits: {
+        Row: {
+          amount: number
+          created_at: string
+          date: string
+          id: string
+          member_id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          date: string
+          id?: string
+          member_id: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          date?: string
+          id?: string
+          member_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deposits_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           amount: number

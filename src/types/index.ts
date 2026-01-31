@@ -6,6 +6,7 @@ export type Member = Tables<"members">;
 export type MealEntry = Tables<"meal_entries">;
 export type Expense = Tables<"expenses">;
 export type Profile = Tables<"profiles">;
+export type Deposit = Tables<"deposits">;
 
 // Custom types for our application context
 export interface AppContextType {
@@ -14,7 +15,9 @@ export interface AppContextType {
   members: Member[];
   addMember: (name: string) => void;
   deleteMember: (id: string) => void;
-  updateMemberBalance: (id: string, amount: number) => void;
+  deposits: Deposit[];
+  addDeposit: (memberId: string, amount: number) => void;
+  getMemberDeposits: (memberId: string) => number;
   mealEntries: MealEntry[];
   addMealEntry: (memberId: string, date: string, count: number) => void;
   updateMealEntry: (id: string, count: number) => void;

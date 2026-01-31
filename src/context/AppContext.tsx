@@ -1,35 +1,11 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { AppContextType, Member, MealEntry, Expense } from "@/types";
-import { supabase as sb } from "@/integrations/supabase/client";
+import { AppContextType, Member, MealEntry, Expense, Deposit } from "@/types";
 import { toast } from "sonner";
 import { useAuth } from "./AuthContext";
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
-
-// Generate a unique ID
-const generateId = () => Math.random().toString(36).substr(2, 9);
-
-// Load data from localStorage
-const loadData = <T,>(key: string, defaultValue: T): T => {
-  try {
-    const saved = localStorage.getItem(key);
-    return saved ? JSON.parse(saved) : defaultValue;
-  } catch (error) {
-    console.error(`Error loading data for key "${key}":`, error);
-    return defaultValue;
-  }
-};
-
-// Save data to localStorage
-const saveData = <T,>(key: string, data: T): void => {
-  try {
-    localStorage.setItem(key, JSON.stringify(data));
-  } catch (error) {
-    console.error(`Error saving data for key "${key}":`, error);
-  }
-};
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
@@ -37,8 +13,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [members, setMembers] = useState<Member[]>([]);
   const [mealEntries, setMealEntries] = useState<MealEntry[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [loading, setLoading] = useState(true);
   const currencySymbol = "৳"; // Bangladeshi Taka symbol
+
+  // Helper function to check if a date is in the current month
+  const isCurrentMonth = (dateString: string) => {
+    const date = new Date(dateString);
+    return (
+      date.getMonth() === currentMonth.getMonth() &&
+      date.getFullYear() === currentMonth.getFullYear()
+    );
+  };
 
   // Fetch data from Supabase when user logs in
   useEffect(() => {
@@ -47,6 +33,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setMembers([]);
         setMealEntries([]);
         setExpenses([]);
+        setDeposits([]);
         setLoading(false);
         return;
       }
@@ -77,10 +64,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           .order('date', { ascending: true });
         
         if (expensesError) throw expensesError;
+
+        // Fetch deposits
+        const { data: depositsData, error: depositsError } = await supabase
+          .from('deposits')
+          .select('*')
+          .order('date', { ascending: true });
+        
+        if (depositsError) throw depositsError;
         
         setMembers(membersData || []);
         setMealEntries(mealEntriesData || []);
         setExpenses(expensesData || []);
+        setDeposits(depositsData || []);
       } catch (error) {
         console.error('Error fetching data:', error);
         toast.error('Failed to load data');
@@ -129,6 +125,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       toast.error('Failed to delete member meal entries');
       return;
     }
+
+    // Delete related deposits (cascade should handle this, but let's be explicit)
+    const { error: depositError } = await supabase
+      .from('deposits')
+      .delete()
+      .eq('member_id', id);
+    
+    if (depositError) {
+      console.error('Error deleting deposits:', depositError);
+      toast.error('Failed to delete member deposits');
+      return;
+    }
     
     // Then delete the member
     const { error } = await supabase
@@ -144,30 +152,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     
     setMembers(members.filter(m => m.id !== id));
     setMealEntries(mealEntries.filter(e => e.member_id !== id));
+    setDeposits(deposits.filter(d => d.member_id !== id));
   };
 
-  const updateMemberBalance = async (id: string, amount: number) => {
-    const member = members.find(m => m.id === id);
-    if (!member) return;
+  // Deposit functions - deposits are tracked per month
+  const addDeposit = async (memberId: string, amount: number) => {
+    if (!user) return;
     
-    const newBalance = member.balance + amount;
+    const today = new Date();
+    const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     
-    const { error } = await supabase
-      .from('members')
-      .update({ balance: newBalance, updated_at: new Date().toISOString() })
-      .eq('id', id);
+    const newDeposit = {
+      member_id: memberId,
+      amount,
+      date: dateStr,
+      user_id: user.id
+    };
+    
+    const { data, error } = await supabase
+      .from('deposits')
+      .insert([newDeposit])
+      .select()
+      .single();
     
     if (error) {
-      console.error('Error updating balance:', error);
-      toast.error('Failed to update balance');
+      console.error('Error adding deposit:', error);
+      toast.error('Failed to add deposit');
       return;
     }
     
-    setMembers(
-      members.map((m) =>
-        m.id === id ? { ...m, balance: newBalance, updated_at: new Date().toISOString() } : m
-      )
-    );
+    setDeposits([...deposits, data]);
+  };
+
+  // Get total deposits for a member in current month
+  const getMemberDeposits = (memberId: string) => {
+    return deposits
+      .filter((d) => d.member_id === memberId && isCurrentMonth(d.date))
+      .reduce((total, d) => total + Number(d.amount), 0);
   };
 
   // Meal entry functions
@@ -250,23 +271,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setExpenses([...expenses, data]);
   };
 
-  // Helper functions for calculations
-  const isCurrentMonth = (dateString: string) => {
-    const date = new Date(dateString);
-    return (
-      date.getMonth() === currentMonth.getMonth() &&
-      date.getFullYear() === currentMonth.getFullYear()
-    );
-  };
-
+  // Calculation functions - all filtered by current month
   const getTotalExpenses = () => {
     return expenses
       .filter((expense) => isCurrentMonth(expense.date))
-      .reduce((total, expense) => total + expense.amount, 0);
+      .reduce((total, expense) => total + Number(expense.amount), 0);
   };
 
   const getTotalDeposits = () => {
-    return members.reduce((total, member) => total + member.balance, 0);
+    return deposits
+      .filter((deposit) => isCurrentMonth(deposit.date))
+      .reduce((total, deposit) => total + Number(deposit.amount), 0);
   };
 
   const getTotalMeals = () => {
@@ -279,8 +294,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return getTotalDeposits() - getTotalExpenses();
   };
 
-  // Fixed meal rate calculation - ensure we're only calculating for current month
-  // and handling division by zero properly
   const getMealRate = () => {
     const totalMeals = getTotalMeals();
     const totalExpenses = getTotalExpenses();
@@ -298,36 +311,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Function to clear data for the current month
   const clearCurrentMonth = async () => {
     try {
-      const month = currentMonth.getMonth() + 1; // JavaScript months are 0-11
+      const month = currentMonth.getMonth() + 1;
       const year = currentMonth.getFullYear();
       
-      const { error } = await supabase.rpc('clear_current_month_data', { month, year });
+      // Delete meal entries for current month
+      const { error: mealError } = await supabase
+        .from('meal_entries')
+        .delete()
+        .gte('date', `${year}-${String(month).padStart(2, '0')}-01`)
+        .lt('date', month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, '0')}-01`);
       
-      if (error) throw error;
+      if (mealError) throw mealError;
+
+      // Delete expenses for current month
+      const { error: expenseError } = await supabase
+        .from('expenses')
+        .delete()
+        .gte('date', `${year}-${String(month).padStart(2, '0')}-01`)
+        .lt('date', month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, '0')}-01`);
       
-      // Clear local data as well
-      const filteredMealEntries = mealEntries.filter(entry => {
-        const entryDate = new Date(entry.date);
-        return !(entryDate.getMonth() === currentMonth.getMonth() && 
-                entryDate.getFullYear() === currentMonth.getFullYear());
-      });
+      if (expenseError) throw expenseError;
+
+      // Delete deposits for current month
+      const { error: depositError } = await supabase
+        .from('deposits')
+        .delete()
+        .gte('date', `${year}-${String(month).padStart(2, '0')}-01`)
+        .lt('date', month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, '0')}-01`);
       
-      const filteredExpenses = expenses.filter(expense => {
-        const expenseDate = new Date(expense.date);
-        return !(expenseDate.getMonth() === currentMonth.getMonth() && 
-                expenseDate.getFullYear() === currentMonth.getFullYear());
-      });
+      if (depositError) throw depositError;
       
-      // Reset member balances
-      const updatedMembers = members.map(member => ({
-        ...member,
-        balance: 0,
-        updated_at: new Date().toISOString()
-      }));
-      
-      setMealEntries(filteredMealEntries);
-      setExpenses(filteredExpenses);
-      setMembers(updatedMembers);
+      // Update local state
+      setMealEntries(mealEntries.filter(entry => !isCurrentMonth(entry.date)));
+      setExpenses(expenses.filter(expense => !isCurrentMonth(expense.date)));
+      setDeposits(deposits.filter(deposit => !isCurrentMonth(deposit.date)));
       
       toast.success(`Data for ${currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })} has been cleared`);
       return Promise.resolve();
@@ -344,7 +361,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     members,
     addMember,
     deleteMember,
-    updateMemberBalance,
+    deposits,
+    addDeposit,
+    getMemberDeposits,
     mealEntries,
     addMealEntry,
     updateMealEntry,

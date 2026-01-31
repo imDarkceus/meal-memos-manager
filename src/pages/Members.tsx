@@ -6,10 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, User, FileText } from "lucide-react";
+import { Plus, User, FileText, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const Members = () => {
-  const { members, addMember, updateMemberBalance, currencySymbol } = useAppContext();
+  const { members, addMember, deleteMember, updateMemberBalance, currencySymbol } = useAppContext();
   const { toast } = useToast();
   const [newMemberName, setNewMemberName] = useState("");
   const [depositAmounts, setDepositAmounts] = useState<{ [key: string]: string }>({});
@@ -28,7 +39,7 @@ const Members = () => {
   const handleDepositChange = (memberId: string, value: string) => {
     setDepositAmounts({
       ...depositAmounts,
-      [memberId]: value.replace(/[^\d.-]/g, ""), // Only allow numbers, dots, and negative sign
+      [memberId]: value.replace(/[^\d.-]/g, ""),
     });
   };
 
@@ -47,6 +58,15 @@ const Members = () => {
         description: `${member?.name}'s balance has been updated by ${currencySymbol}${amount.toFixed(2)}`,
       });
     }
+  };
+
+  const handleDeleteMember = async (memberId: string) => {
+    const member = members.find(m => m.id === memberId);
+    await deleteMember(memberId);
+    toast({
+      title: "Member Deleted",
+      description: `${member?.name} has been removed from the mess`,
+    });
   };
 
   return (
@@ -100,7 +120,7 @@ const Members = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-2 w-full sm:w-auto">
+                  <div className="flex gap-2 w-full sm:w-auto items-center">
                     <Input
                       placeholder="Amount"
                       value={depositAmounts[member.id] || ""}
@@ -113,6 +133,27 @@ const Members = () => {
                     >
                       Update Balance
                     </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Member</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete {member.name}? This will also delete all their meal entries and cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteMember(member.id)}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               ))}

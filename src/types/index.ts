@@ -13,6 +13,7 @@ export interface AppContextType {
   setCurrentMonth: (date: Date) => void;
   members: Member[];
   addMember: (name: string) => void;
+  deleteMember: (id: string) => void;
   updateMemberBalance: (id: string, amount: number) => void;
   mealEntries: MealEntry[];
   addMealEntry: (memberId: string, date: string, count: number) => void;

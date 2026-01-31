@@ -19,6 +19,7 @@ const Dashboard = () => {
     getRemainingBalance,
     getMealRate,
     getMemberMeals,
+    getMemberDeposits,
     currencySymbol
   } = useAppContext();
 
@@ -310,10 +311,11 @@ const Dashboard = () => {
           <CardContent>
             {members.length > 0 ? (
               <div className="space-y-4">
-                {members.map((member) => {
+              {members.map((member) => {
                   const memberMeals = getMemberMeals(member.id);
+                  const memberDeposit = getMemberDeposits(member.id);
                   const mealCost = memberMeals * getMealRate();
-                  const balance = member.balance - mealCost;
+                  const balance = memberDeposit - mealCost;
                   
                   return (
                     <div 

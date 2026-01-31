@@ -13,7 +13,9 @@ const Report = () => {
     members, 
     getMemberMeals, 
     getMealRate, 
-    currencySymbol 
+    getMemberDeposits,
+    currencySymbol,
+    currentMonth
   } = useAppContext();
 
   const [reports, setReports] = useState<MemberReport[]>([]);
@@ -23,8 +25,9 @@ const Report = () => {
     
     const memberReports = members.map(member => {
       const totalMeals = getMemberMeals(member.id);
+      const totalDeposit = getMemberDeposits(member.id);
       const mealCost = totalMeals * mealRate;
-      const balance = member.balance - mealCost;
+      const balance = totalDeposit - mealCost;
       let remarks = "";
       
       if (balance > 0) {
@@ -39,7 +42,7 @@ const Report = () => {
         id: member.id,
         name: member.name,
         totalMeals,
-        totalDeposit: member.balance,
+        totalDeposit,
         mealCost,
         balance,
         remarks
@@ -47,7 +50,9 @@ const Report = () => {
     });
     
     setReports(memberReports);
-  }, [members, getMemberMeals, getMealRate, currencySymbol]);
+  }, [members, getMemberMeals, getMealRate, getMemberDeposits, currencySymbol, currentMonth]);
+
+  const monthLabel = currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
 
   const exportToPDF = () => {
     // Create new jsPDF instance with better orientation for table data
@@ -58,7 +63,7 @@ const Report = () => {
     });
     
     // Add title with better formatting
-    const title = "AREA 51 - MEMBERS REPORT";
+    const title = `AREA 51 - MEMBERS REPORT (${monthLabel})`;
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
     doc.text(title, doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
@@ -131,13 +136,13 @@ const Report = () => {
       doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 30, doc.internal.pageSize.getHeight() - 10);
     }
     
-    doc.save("area51-member-report.pdf");
+    doc.save(`area51-member-report-${monthLabel.replace(' ', '-')}.pdf`);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Members Report</h1>
+        <h1 className="text-2xl font-bold">Members Report ({monthLabel})</h1>
         <Button 
           onClick={exportToPDF}
           className="flex items-center gap-2"
